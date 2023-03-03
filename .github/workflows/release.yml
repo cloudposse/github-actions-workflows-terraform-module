@@ -50,22 +50,6 @@ on:
         required: false
         default: ${{ github.event.release.tag_name }}
         type: string
-    secrets:
-      secret-outputs-passphrase:
-        description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"
-        required: true
-      registry:
-        description: "ECR ARN"
-        required: true
-      github-private-actions-pat:
-        description: "Github PAT allow to pull private repos"
-        required: true
-      ecr-region:
-        description: "ECR AWS region"
-        required: true
-      ecr-iam-role:
-        description: "IAM Role ARN provide ECR write/read access"
-        required: true
 
 permissions:
   id-token: write
@@ -76,40 +60,16 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  ci:
-    uses: cloudposse/github-actions-workflows/.github/workflows/ci-dockerized-app-promote.yml@main
+  ci/terraform:
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform.yml@main
     with:
       organization: ${{ inputs.organization }}
       repository: ${{ inputs.repository }}
-      version: ${{ inputs.version }}
-    secrets:
-      ecr-region: ${{ secrets.ecr-region }}
-      ecr-iam-role: ${{ secrets.ecr-iam-role }}
-      registry: ${{ secrets.registry }}
-      secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
+      suggestions: false
 
-  cd-staging:
-    name: cd / staging
-    uses: cloudposse/github-actions-workflows/.github/workflows/cd-helmfile.yml@main
-    needs: [ ci ]
+  ci/readme:
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-readme.yml@main
     with:
-      image: ${{ needs.ci.outputs.image }}
-      tag: ${{ needs.ci.outputs.tag }}
+      organization: ${{ inputs.organization }}
       repository: ${{ inputs.repository }}
-      environment: staging
-    secrets:
-      secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
-      github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
-
-  cd-production:
-    name: cd / production
-    uses: cloudposse/github-actions-workflows/.github/workflows/cd-helmfile.yml@main
-    needs: [ ci, cd-staging ]
-    with:
-      image: ${{ needs.ci.outputs.image }}
-      tag: ${{ needs.ci.outputs.tag }}
-      repository: ${{ inputs.repository }}
-      environment: production
-    secrets:
-      secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
-      github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
+      suggestions: false
