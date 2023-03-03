@@ -60,31 +60,9 @@ on:
         required: false
         type: boolean
         default: ${{ github.event.pull_request.state == 'open' }}
-      labels:
-        description: "Pull Request labels"
-        required: false
-        default: ${{ toJSON(github.event.pull_request.labels.*.name) }}
-        type: string
-    secrets:
-      secret-outputs-passphrase:
-        description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"
-        required: true
-      registry:
-        description: "ECR ARN"
-        required: true
-      github-private-actions-pat:
-        description: "Github PAT allow to pull private repos"
-        required: true
-      ecr-region:
-        description: "ECR AWS region"
-        required: true
-      ecr-iam-role:
-        description: "IAM Role ARN provide ECR write/read access"
-        required: true
 
 permissions:
-  pull-requests: write
-  deployments: write
+  pull-requests: read
   id-token: write
   contents: read
 
@@ -93,31 +71,24 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  ci:
-    uses: cloudposse/github-actions-workflows/.github/workflows/ci-dockerized-app-build.yml@main
+  ci/terraform:
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform.yml@main
     with:
       organization: ${{ inputs.organization }}
       repository: ${{ inputs.repository }}
-    secrets:
-      ecr-region: ${{ secrets.ecr-region }}
-      ecr-iam-role: ${{ secrets.ecr-iam-role }}
-      registry: ${{ secrets.registry }}
-      secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
+      suggestions: true
 
-  cd:
-    uses: cloudposse/github-actions-workflows/.github/workflows/cd-preview-helmfile.yml@main
-    needs: [ ci ]
-    if: ${{ always() }}
+  ci/readme:
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-readme.yml@main
     with:
-      image: ${{ needs.ci.outputs.image }}
-      tag: ${{ needs.ci.outputs.tag }}
+      organization: ${{ inputs.organization }}
       repository: ${{ inputs.repository }}
-      open: ${{ inputs.open }}
-      labels: ${{ inputs.labels }}
-      ref: ${{ inputs.ref }}
-      exclusive: false
-      env-label: |
-        preview: deploy
-    secrets:
-      secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
-      github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
+      suggestions: true
+
+  comment:
+    needs: [ci/terraform, ci/readme]
+    uses: cloudposse/github-actions-workflows/.github/workflows/controller-comment-pr.yml@main
+    with:
+      organization: ${{ inputs.organization }}
+      repository: ${{ inputs.repository }}
+      comment: "Reach us in SweetOps channel to get review"
