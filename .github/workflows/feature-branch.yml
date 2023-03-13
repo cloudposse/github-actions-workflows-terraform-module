@@ -36,12 +36,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  ci/terraform:
+  ci_terraform:
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform.yml@shared_worflows
     with:
       suggestions: true
 
-  ci/readme:
+  ci_readme:
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-readme.yml@shared_worflows
     with:
       suggestions: true
