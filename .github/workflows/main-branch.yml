@@ -34,18 +34,15 @@ concurrency:
 
 jobs:
   ci/terraform:
-    uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform.yml@main
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform.yml@shared_workflows
     with:
       suggestions: false
 
   ci/readme:
-    uses: cloudposse/github-actions-workflows/.github/workflows/ci-readme.yml@main
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-readme.yml@shared_workflows
     with:
       suggestions: false
 
   controller/release:
-    uses: cloudposse/github-actions-workflows/.github/workflows/controller-release.yml@main
+    uses: cloudposse/github-actions-workflows/.github/workflows/controller-release.yml@shared_workflows
     needs: [ci/terraform, ci/readme]
-    with:
-      suggestions:
-        uses: cloudposse/github-actions-workflows/.github/workflows/release.yml@main
