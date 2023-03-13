@@ -26,11 +26,6 @@ name: |-
 on:
   workflow_call:
 
-permissions:
-  pull-requests: read
-  id-token: write
-  contents: read
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
