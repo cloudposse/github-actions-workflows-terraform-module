@@ -36,7 +36,7 @@ jobs:
     with:
       # Workaround for https://github.com/community/community/discussions/9099
       # We should switch to nofilter once it's fixed
-      filter_mode: diff_context
+      filter-mode: diff_context
       suggestions: true
 
   ci_readme:
@@ -44,5 +44,5 @@ jobs:
     with:
       # Workaround for https://github.com/community/community/discussions/9099
       # We should switch to nofilter once it's fixed
-      filter_mode: diff_context
+      filter-mode: diff_context
       suggestions: true
