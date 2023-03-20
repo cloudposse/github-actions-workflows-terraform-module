@@ -23,6 +23,10 @@ name: |-
 
 on:
   workflow_call:
+    secrets:
+      github_token:
+        description: "GitHub API token"
+        required: true
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -46,7 +50,7 @@ jobs:
     with:
       is_fork: false
     secrets:
-      github_token: ${{ secrets.github_token }}
+      github_access_token: ${{ secrets.github_access_token }}
 
   controller_release:
     uses: cloudposse/github-actions-workflows/.github/workflows/controller-release.yml@shared_worflows
