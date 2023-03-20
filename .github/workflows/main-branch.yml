@@ -41,6 +41,13 @@ jobs:
       filter-mode: nofilter
       suggestions: false
 
+  ci_codeowners:
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners.yml@shared_worflows
+    with:
+      is_fork: false
+    secrets:
+      github_token: ${{ secrets.github_token }}
+
   controller_release:
     uses: cloudposse/github-actions-workflows/.github/workflows/controller-release.yml@shared_worflows
-    needs: [ci_terraform, ci_readme]
+    needs: [ci_terraform, ci_readme, ci_codeowners]

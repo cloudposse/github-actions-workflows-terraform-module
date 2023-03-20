@@ -25,6 +25,10 @@ name: |-
 
 on:
   workflow_call:
+    secrets:
+      github_token:
+        description: "GitHub API token"
+        required: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -46,3 +50,8 @@ jobs:
       # We should switch to nofilter once it's fixed
       filter-mode: diff_context
       suggestions: true
+
+  ci_codeowners:
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners.yml@shared_worflows
+    with:
+      is_fork: github.event.pull_request.head.repo.full_name != github.repository
