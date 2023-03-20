@@ -24,7 +24,7 @@ name: |-
 on:
   workflow_call:
     secrets:
-      github_token:
+      github_access_token:
         description: "GitHub API token"
         required: true
 
