@@ -49,5 +49,10 @@ jobs:
 
   ci_codeowners:
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners.yml@shared_worflows
-    with:
-      is_fork: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
+    if: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
+
+  ci_codeowners_full:
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners-full.yml@shared_worflows
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    secrets:
+      github_access_token: ${{ secrets.REPO_ACCESS_TOKEN }}
