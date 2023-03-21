@@ -23,9 +23,10 @@ name: |-
 
 on:
   workflow_call:
-    github_access_token:
-      description: "GitHub API token"
-      required: true
+    secrets:
+      github_access_token:
+        description: "GitHub API token"
+        required: true
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

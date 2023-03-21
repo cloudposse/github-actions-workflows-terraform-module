@@ -25,13 +25,14 @@ name: |-
 
 on:
   workflow_call:
-    github_access_token:
-      description: "GitHub API token"
-      required: false
+    secrets:
+      github_access_token:
+        description: "GitHub API token"
+        required: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   ci_terraform:
