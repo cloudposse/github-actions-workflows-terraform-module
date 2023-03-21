@@ -23,6 +23,9 @@ name: |-
 
 on:
   workflow_call:
+    github_access_token:
+      description: "GitHub API token"
+      required: true
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -41,11 +44,13 @@ jobs:
       filter-mode: nofilter
       suggestions: false
 
-  ci_codeowners_full:
-    uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners-full.yml@shared_worflows
+  ci_codeowners:
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners.yml@shared_worflows
+    with:
+      is_fork: false
     secrets:
       github_access_token: ${{ secrets.REPO_ACCESS_TOKEN }}
 
   controller_release:
     uses: cloudposse/github-actions-workflows/.github/workflows/controller-release.yml@shared_worflows
-    needs: [ci_terraform, ci_readme, ci_codeowners_full]
+    needs: [ci_terraform, ci_readme, ci_codeowners]
