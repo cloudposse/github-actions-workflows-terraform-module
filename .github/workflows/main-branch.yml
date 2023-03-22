@@ -16,9 +16,10 @@ name: |-
       id-token: write
     
     jobs:
-      default:
-        uses: cloudposse/github-actions-workflows-terraform-module/.github/workflows/main-branch.yml@main
-
+      terraform-module:
+        uses: cloudposse/github-actions-workflows-terraform-module/.github/workflows/feature-branch.yml@main
+        secrets:
+          github_access_token: ${{ secrets.GH_ACCESS_TOKEN }}
   ```
 
 on:
@@ -34,24 +35,24 @@ concurrency:
 
 jobs:
   ci_terraform:
-    uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform.yml@shared_worflows
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform.yml@main
     with:
       filter-mode: nofilter
       suggestions: false
 
   ci_readme:
-    uses: cloudposse/github-actions-workflows/.github/workflows/ci-readme.yml@shared_worflows
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-readme.yml@main
     with:
       filter-mode: nofilter
       suggestions: false
 
   ci_codeowners:
-    uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners.yml@shared_worflows
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners.yml@main
     with:
       is_fork: false
     secrets:
       github_access_token: ${{ secrets.github_access_token }}
 
   controller_release:
-    uses: cloudposse/github-actions-workflows/.github/workflows/controller-release.yml@shared_worflows
+    uses: cloudposse/github-actions-workflows/.github/workflows/controller-release.yml@main
     needs: [ci_terraform, ci_readme, ci_codeowners]
