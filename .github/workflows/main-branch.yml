@@ -1,100 +1,58 @@
 name: |-
-  Main branch workflow
-  
-  Build, test Docker image, deploy it to EKS `dev` environment and draft new release  
+  Main Branch Workflow
   
   ### Usage 
   
-  Create in your repo  __`.github/workflows/main.yaml`__
+  In your repo create  __`.github/workflows/main-branch.yaml`__
   
   ```yaml
     name: Main Branch
     on:
       push:
-        branches: [ master ]
+        branches: [ main ]
     
     permissions:
       contents: write
       id-token: write
     
     jobs:
-      do:
-        uses: cloudposse/github-actions-workflows-docker-ecr-eks-helmfile/.github/workflows/main-branch.yml@main
-        with:
-          organization: "$\{\{ github.event.repository.owner.login \}\}"
-          repository: "$\{\{ github.event.repository.name \}\}"
+      terraform-module:
+        uses: cloudposse/github-actions-workflows-terraform-module/.github/workflows/feature-branch.yml@main
         secrets:
-          github-private-actions-pat: "$\{\{ secrets.PUBLIC_REPO_ACCESS_TOKEN \}\}"
-          registry: "$\{\{ secrets.ECR_REGISTRY \}\}"
-          secret-outputs-passphrase: "$\{\{ secrets.GHA_SECRET_OUTPUT_PASSPHRASE \}\}"
-          ecr-region: "$\{\{ secrets.ECR_REGION \}\}"
-          ecr-iam-role: "$\{\{ secrets.ECR_IAM_ROLE \}\}"
+          github_access_token: ${{ secrets.GH_ACCESS_TOKEN }}
   ```
 
 on:
   workflow_call:
-    inputs:
-      organization:
-        description: "Repository owner organization (ex. acme for repo acme/example)"
-        required: false
-        default: ${{ github.event.repository.owner.login }}
-        type: string
-      repository:
-        description: "Repository name (ex. example for repo acme/example)"
-        required: false
-        default: ${{ github.event.repository.name }}
-        type: string
     secrets:
-      secret-outputs-passphrase:
-        description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"
+      github_access_token:
+        description: "GitHub API token"
         required: true
-      registry:
-        description: "ECR ARN"
-        required: true
-      github-private-actions-pat:
-        description: "Github PAT allow to pull private repos"
-        required: true
-      ecr-region:
-        description: "ECR AWS region"
-        required: true
-      ecr-iam-role:
-        description: "IAM Role ARN provide ECR write/read access"
-        required: true
-
-permissions:
-  contents: write
-  id-token: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  ci:
-    uses: cloudposse/github-actions-workflows/.github/workflows/ci-dockerized-app-build.yml@main
+  ci_terraform:
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform.yml@main
     with:
-      organization: ${{ inputs.organization }}
-      repository: ${{ inputs.repository }}
-    secrets:
-      ecr-region: ${{ secrets.ecr-region }}
-      ecr-iam-role: ${{ secrets.ecr-iam-role }}
-      registry: ${{ secrets.registry }}
-      secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
+      filter-mode: nofilter
+      suggestions: false
 
-  cd:
-    uses: cloudposse/github-actions-workflows/.github/workflows/cd-helmfile.yml@main
-    needs: [ ci ]
+  ci_readme:
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-readme.yml@main
     with:
-      image: ${{ needs.ci.outputs.image }}
-      tag: ${{ needs.ci.outputs.tag }}
-      repository: ${{ inputs.repository }}
-      environment: dev
-    secrets:
-      secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
-      github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
+      filter-mode: nofilter
+      suggestions: false
 
-  release:
-    uses:  cloudposse/github-actions-workflows/.github/workflows/controller-draft-release.yml@main
-    needs: [ cd ]
+  ci_codeowners:
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners.yml@main
+    with:
+      is_fork: false
     secrets:
-      github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
+      github_access_token: ${{ secrets.github_access_token }}
+
+  controller_release:
+    uses: cloudposse/github-actions-workflows/.github/workflows/controller-release.yml@main
+    needs: [ci_terraform, ci_readme, ci_codeowners]
