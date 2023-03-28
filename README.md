@@ -1,8 +1,8 @@
 
 <!-- markdownlint-disable -->
-# github-actions-workflows-docker-ecr-eks-helmfile
+# github-actions-workflows-terraform-module
 
- [![Latest Release](https://img.shields.io/github/release/cloudposse/github-actions-workflows-docker-ecr-eks-helmfile.svg)](https://github.com/cloudposse/github-actions-workflows-docker-ecr-eks-helmfile/releases/latest) [![Slack Community](https://slack.cloudposse.com/badge.svg)](https://slack.cloudposse.com)
+ [![Latest Release](https://img.shields.io/github/release/cloudposse/github-actions-workflows-terraform-module.svg)](https://github.com/cloudposse/github-actions-workflows-terraform-module/releases/latest) [![Slack Community](https://slack.cloudposse.com/badge.svg)](https://slack.cloudposse.com)
 <!-- markdownlint-restore -->
 
 [![README Header][readme_header_img]][readme_header_link]
@@ -30,7 +30,7 @@
 
 -->
 
-Release workflow for Dockerized application using ECR and deploying on EKS with Helmfile.
+Workflows for managing a terraform module repo
 
 ---
 
@@ -61,25 +61,7 @@ It's 100% Open Source and licensed under the [APACHE2](LICENSE).
 ## Introduction
 
 Use provided [GitHub Actions reusable workflows](https://docs.github.com/en/actions/using-workflows/reusing-workflows) 
-to implement consistent release workflow for any kind of application that use 
-* [Docker](https://docs.docker.com/engine/reference/builder/) for developing, shipping, and running,
-* [ECR](https://aws.amazon.com/ecr/) to store the Docker images
-* [EKS](https://aws.amazon.com/eks) for running application in scale
-* [Helmfile](https://github.com/roboll/helmfile) as declarative deploy manifest
-
-## Preconditions
-
-Application repository reference this reusable workflows should follows this structure
-
-```
-  .
-  ├── Dockerfile
-  ├── deploy/
-  │   └── helmfile.yaml
-  └── test/
-      ├── docker-compose.yml
-      └── test.sh
-```
+to implement consistent release workflow for terraform modules
 
 
 
@@ -96,65 +78,38 @@ Application repository reference this reusable workflows should follows this str
 
 | Name | Description |
 |------|-------------|
-| [Features branch (Pull request) workflow ](#features-branch-pull-request-workflow) | Build, test Docker image, deploy it to EKS `preview` environment depends of PR labels   |
-| [Hotfix branch (Pull request into release/\* branches) workflow ](#hotfix-branch-pull-request-into-release-branches-workflow) | Build, test Docker image, deploy it to EKS `hotfix` environment depends of PR labels   |
-| [Hotfix workflow enable](#hotfix-workflow-enable) | For each new release create `release/{version}` branch that is key puzzle for `hotfix` workflow. |
-| [Hotfix release workflow](#hotfix-release-workflow) | Build, test Docker image, deploy it to EKS production environment and reintegrate `hotfix` into the main branch   |
-| [Main branch workflow](#main-branch-workflow) | Build, test Docker image, deploy it to EKS `dev` environment and draft new release   |
-| [Release workflow ](#release-workflow) | Promote existing Docker image to release version, deploy it to EKS `staging` and then `production` environments.   |
+| [Features Branch (Pull Request) Workflow ](#features-branch-pull-request-workflow) | ### Usage  |
+| [Main Branch Workflow](#main-branch-workflow) | ### Usage  |
 
 
 
 
-## Features branch (Pull request) workflow 
-
-Build, test Docker image, deploy it to EKS `preview` environment depends of PR labels  
+## Features Branch (Pull Request) Workflow 
 
 ### Usage 
 
-Create in your repo  __`.github/workflows/feature.yaml`__
+In your repo create  __`.github/workflows/feature-branch.yaml`__
 
 ```yaml
   name: Feature Branch
   on:
     pull_request:
-      branches: [ 'master' ]
-      types: [opened, synchronize, reopened, closed, labeled, unlabeled]
+      branches: [ main ]
+      types: [opened, synchronize, reopened]
   
   permissions:
     pull-requests: write
-    deployments: write
     id-token: write
     contents: read
   
   jobs:
-    do:
-      uses: cloudposse/github-actions-workflows-docker-ecr-eks-helmfile/.github/workflows/feature-branch.yml@main
-      with:
-        organization: "${{ github.event.repository.owner.login }}"
-        repository: "${{ github.event.repository.name }}"
-        open: ${{ github.event.pull_request.state == 'open' }}
-        labels: ${{ toJSON(github.event.pull_request.labels.*.name) }}
-        ref: ${{ github.event.pull_request.head.ref  }}
+    default:
+      uses: cloudposse/github-actions-workflows-terraform-module/.github/workflows/feature-branch.yml@main
       secrets:
-        github-private-actions-pat: "${{ secrets.PUBLIC_REPO_ACCESS_TOKEN }}"
-        registry: "${{ secrets.ECR_REGISTRY }}"
-        secret-outputs-passphrase: "${{ secrets.GHA_SECRET_OUTPUT_PASSPHRASE }}"
-        ecr-region: "${{ secrets.ECR_REGION }}"
-        ecr-iam-role: "${{ secrets.ECR_IAM_ROLE }}"
+        github_access_token: ${{ secrets.GH_ACCESS_TOKEN }}
 ```
 
 
-
-### Inputs
-
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|----------|
-| labels | Pull Request labels | string | ${{ toJSON(github.event.pull\_request.labels.\*.name) }} | false |
-| open | Pull Request open/close state. Set true if opened | boolean | ${{ github.event.pull\_request.state == 'open' }} | false |
-| organization | Repository owner organization (ex. acme for repo acme/example) | string | ${{ github.event.repository.owner.login }} | false |
-| ref | The fully-formed ref of the branch or tag that triggered the workflow run | string | ${{ github.event.pull\_request.head.ref }} | false |
-| repository | Repository name (ex. example for repo acme/example) | string | ${{ github.event.repository.name }} | false |
 
 
 
@@ -162,235 +117,37 @@ Create in your repo  __`.github/workflows/feature.yaml`__
 
 | Name | Description | Required |
 |------|-------------|----------|
-| ecr-iam-role | IAM Role ARN provide ECR write/read access | true |
-| ecr-region | ECR AWS region | true |
-| github-private-actions-pat | Github PAT allow to pull private repos | true |
-| registry | ECR ARN | true |
-| secret-outputs-passphrase | Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs) | true |
+| github\_access\_token | GitHub API token | false |
 
 
 
 
 
 
-## Hotfix branch (Pull request into release/* branches) workflow 
-
-Build, test Docker image, deploy it to EKS `hotfix` environment depends of PR labels  
+## Main Branch Workflow
 
 ### Usage 
 
-Create in your repo  __`.github/workflows/hotfix-branch.yaml`__
-
-```yaml
-  name: Hotfix Branch
-  on:
-    pull_request:
-      branches: [ 'release/**' ]
-      types: [opened, synchronize, reopened, closed, labeled, unlabeled]
-  
-  permissions:
-    pull-requests: write
-    deployments: write
-    id-token: write
-    contents: read
-  
-  jobs:
-    do:
-      uses: cloudposse/github-actions-workflows-docker-ecr-eks-helmfile/.github/workflows/hotfix-branch.yml@main
-      with:
-        organization: "${{ github.event.repository.owner.login }}"
-        repository: "${{ github.event.repository.name }}"
-        open: ${{ github.event.pull_request.state == 'open' }}
-        labels: ${{ toJSON(github.event.pull_request.labels.*.name) }}
-        ref: ${{ github.event.pull_request.head.ref  }}
-      secrets:
-        github-private-actions-pat: "${{ secrets.PUBLIC_REPO_ACCESS_TOKEN }}"
-        registry: "${{ secrets.ECR_REGISTRY }}"
-        secret-outputs-passphrase: "${{ secrets.GHA_SECRET_OUTPUT_PASSPHRASE }}"
-        ecr-region: "${{ secrets.ECR_REGION }}"
-        ecr-iam-role: "${{ secrets.ECR_IAM_ROLE }}"
-```
-
-
-
-### Inputs
-
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|----------|
-| labels | Pull Request labels | string | ${{ toJSON(github.event.pull\_request.labels.\*.name) }} | false |
-| open | Pull Request open/close state. Set true if opened | boolean | ${{ github.event.pull\_request.state == 'open' }} | false |
-| organization | Repository owner organization (ex. acme for repo acme/example) | string | ${{ github.event.repository.owner.login }} | false |
-| ref | The fully-formed ref of the branch or tag that triggered the workflow run | string | ${{ github.event.pull\_request.head.ref }} | false |
-| repository | Repository name (ex. example for repo acme/example) | string | ${{ github.event.repository.name }} | false |
-
-
-
-### Secrets
-
-| Name | Description | Required |
-|------|-------------|----------|
-| ecr-iam-role | IAM Role ARN provide ECR write/read access | true |
-| ecr-region | ECR AWS region | true |
-| github-private-actions-pat | Github PAT allow to pull private repos | true |
-| registry | ECR ARN | true |
-| secret-outputs-passphrase | Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs) | true |
-
-
-
-
-
-
-## Hotfix workflow enable
-
-For each new release create `release/{version}` branch that is key puzzle for `hotfix` workflow.
-
-### Usage 
-
-Create in your repo  __`.github/workflows/hotfix-enabled.yaml`__
-
-```yaml
-  name: Release branch
-  on:
-    release:
-      types: [published]
-
-  permissions:
-    id-token: write
-    contents: write
-
-  jobs:
-    hotfix:
-      name: release / branch
-      uses: cloudposse/github-actions-workflows-docker-ecr-eks-helmfile/.github/workflows/hotfix-mixin.yml@main
-      with:
-        version: ${{ github.event.release.tag_name }}
-```
-
-or add `hotfix` job to existing __`.github/workflows/release.yaml`__
-
-```
-  jobs:
-    hotfix:
-      name: release / branch
-      uses: cloudposse/github-actions-workflows-docker-ecr-eks-helmfile/.github/workflows/hotfix-mixin.yml@main
-      with:
-        version: ${{ github.event.release.tag_name }}  
-```
-
-
-
-### Inputs
-
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|----------|
-| version | Release version tag | string | N/A | true |
-
-
-
-
-
-
-
-
-## Hotfix release workflow
-
-Build, test Docker image, deploy it to EKS production environment and reintegrate `hotfix` into the main branch  
-
-### Usage 
-
-Create in your repo  __`.github/workflows/hotfix-release.yaml`__
-
-```yaml
-  name: Hotfix Release
-  on:
-    push:
-      branches: [ 'release/**' ]
-  
-  permissions:
-    contents: write
-    id-token: write
-  
-  jobs:
-    do:
-      uses: cloudposse/github-actions-workflows-docker-ecr-eks-helmfile/.github/workflows/hotfix-release.yml@main
-      with:
-        organization: "${{ github.event.repository.owner.login }}"
-        repository: "${{ github.event.repository.name }}"
-      secrets:
-        github-private-actions-pat: "${{ secrets.PUBLIC_REPO_ACCESS_TOKEN }}"
-        registry: "${{ secrets.ECR_REGISTRY }}"
-        secret-outputs-passphrase: "${{ secrets.GHA_SECRET_OUTPUT_PASSPHRASE }}"
-        ecr-region: "${{ secrets.ECR_REGION }}"
-        ecr-iam-role: "${{ secrets.ECR_IAM_ROLE }}"
-```
-
-
-
-### Inputs
-
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|----------|
-| default\_branch | Default branch for this repo | string | main | true |
-| organization | Repository owner organization (ex. acme for repo acme/example) | string | ${{ github.event.repository.owner.login }} | false |
-| repository | Repository name (ex. example for repo acme/example) | string | ${{ github.event.repository.name }} | false |
-
-
-
-### Secrets
-
-| Name | Description | Required |
-|------|-------------|----------|
-| ecr-iam-role | IAM Role ARN provide ECR write/read access | true |
-| ecr-region | ECR AWS region | true |
-| github-private-actions-pat | Github PAT allow to pull private repos | true |
-| registry | ECR ARN | true |
-| secret-outputs-passphrase | Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs) | true |
-
-
-
-
-
-
-## Main branch workflow
-
-Build, test Docker image, deploy it to EKS `dev` environment and draft new release  
-
-### Usage 
-
-Create in your repo  __`.github/workflows/main.yaml`__
+In your repo create  __`.github/workflows/main-branch.yaml`__
 
 ```yaml
   name: Main Branch
   on:
     push:
-      branches: [ master ]
+      branches: [ main ]
   
   permissions:
     contents: write
     id-token: write
   
   jobs:
-    do:
-      uses: cloudposse/github-actions-workflows-docker-ecr-eks-helmfile/.github/workflows/main-branch.yml@main
-      with:
-        organization: "${{ github.event.repository.owner.login }}"
-        repository: "${{ github.event.repository.name }}"
+    terraform-module:
+      uses: cloudposse/github-actions-workflows-terraform-module/.github/workflows/feature-branch.yml@main
       secrets:
-        github-private-actions-pat: "${{ secrets.PUBLIC_REPO_ACCESS_TOKEN }}"
-        registry: "${{ secrets.ECR_REGISTRY }}"
-        secret-outputs-passphrase: "${{ secrets.GHA_SECRET_OUTPUT_PASSPHRASE }}"
-        ecr-region: "${{ secrets.ECR_REGION }}"
-        ecr-iam-role: "${{ secrets.ECR_IAM_ROLE }}"
+        github_access_token: ${{ secrets.GH_ACCESS_TOKEN }}
 ```
 
 
-
-### Inputs
-
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|----------|
-| organization | Repository owner organization (ex. acme for repo acme/example) | string | ${{ github.event.repository.owner.login }} | false |
-| repository | Repository name (ex. example for repo acme/example) | string | ${{ github.event.repository.name }} | false |
 
 
 
@@ -398,71 +155,7 @@ Create in your repo  __`.github/workflows/main.yaml`__
 
 | Name | Description | Required |
 |------|-------------|----------|
-| ecr-iam-role | IAM Role ARN provide ECR write/read access | true |
-| ecr-region | ECR AWS region | true |
-| github-private-actions-pat | Github PAT allow to pull private repos | true |
-| registry | ECR ARN | true |
-| secret-outputs-passphrase | Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs) | true |
-
-
-
-
-
-
-## Release workflow 
-
-Promote existing Docker image to release version, deploy it to EKS `staging` and then `production` environments.  
-
-### Usage 
-
-Create in your repo  __`.github/workflows/release.yaml`__
-
-```yaml
-  name: Release
-  on:
-    release:
-      types: [published]
-  
-  permissions:
-    id-token: write
-    contents: write
-  
-  jobs:
-    perform:
-      uses: cloudposse/github-actions-workflows-docker-ecr-eks-helmfile/.github/workflows/release.yml@main
-      with:
-        organization: "${{ github.event.repository.owner.login }}"
-        repository: "${{ github.event.repository.name }}"
-        version: ${{ github.event.release.tag_name }}
-      secrets:
-        github-private-actions-pat: "${{ secrets.PUBLIC_REPO_ACCESS_TOKEN }}"
-        registry: "${{ secrets.ECR_REGISTRY }}"
-        secret-outputs-passphrase: "${{ secrets.GHA_SECRET_OUTPUT_PASSPHRASE }}"
-        ecr-region: "${{ secrets.ECR_REGION }}"
-        ecr-iam-role: "${{ secrets.ECR_IAM_ROLE }}"
-```
-
-
-
-### Inputs
-
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|----------|
-| organization | Repository owner organization (ex. acme for repo acme/example) | string | ${{ github.event.repository.owner.login }} | false |
-| repository | Repository name (ex. example for repo acme/example) | string | ${{ github.event.repository.name }} | false |
-| version | Release version tag | string | ${{ github.event.release.tag\_name }} | false |
-
-
-
-### Secrets
-
-| Name | Description | Required |
-|------|-------------|----------|
-| ecr-iam-role | IAM Role ARN provide ECR write/read access | true |
-| ecr-region | ECR AWS region | true |
-| github-private-actions-pat | Github PAT allow to pull private repos | true |
-| registry | ECR ARN | true |
-| secret-outputs-passphrase | Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs) | true |
+| github\_access\_token | GitHub API token | true |
 
 
 
@@ -474,7 +167,7 @@ Create in your repo  __`.github/workflows/release.yaml`__
 
 ## Share the Love
 
-Like this project? Please give it a ★ on [our GitHub](https://github.com/cloudposse/github-actions-workflows-docker-ecr-eks-helmfile)! (it helps us **a lot**)
+Like this project? Please give it a ★ on [our GitHub](https://github.com/cloudposse/github-actions-workflows-terraform-module)! (it helps us **a lot**)
 
 Are you using this project or any of our other projects? Consider [leaving a testimonial][testimonial]. =)
 
@@ -491,14 +184,14 @@ Check out these related projects.
 
 For additional context, refer to some of these links.
 
-- [example-app-on-eks](https://github.com/cloudposse/example-app-on-eks) - Example application for CI/CD demonstrations of GitHub Actions deal with Docker, ECR, EKS and Helmfile
+- [terraform-example-module](https://github.com/cloudposse/terraform-example-module) - Example application for CI/CD demonstrations of GitHub Actions deal with Docker, ECR, EKS and Helmfile
 
 
 ## Help
 
 **Got a question?** We got answers.
 
-File a GitHub [issue](https://github.com/cloudposse/github-actions-workflows-docker-ecr-eks-helmfile/issues), send us an [email][email] or join our [Slack Community][slack].
+File a GitHub [issue](https://github.com/cloudposse/github-actions-workflows-terraform-module/issues), send us an [email][email] or join our [Slack Community][slack].
 
 [![README Commercial Support][readme_commercial_support_img]][readme_commercial_support_link]
 
@@ -546,7 +239,7 @@ Sign up for [our newsletter][newsletter] that covers everything on our technolog
 
 ### Bug Reports & Feature Requests
 
-Please use the [issue tracker](https://github.com/cloudposse/github-actions-workflows-docker-ecr-eks-helmfile/issues) to report any bugs or file feature requests.
+Please use the [issue tracker](https://github.com/cloudposse/github-actions-workflows-terraform-module/issues) to report any bugs or file feature requests.
 
 ### Developing
 
@@ -565,7 +258,7 @@ In general, PRs are welcome. We follow the typical "fork-and-pull" Git workflow.
 
 ## Copyright
 
-Copyright © 2017-2022 [Cloud Posse, LLC](https://cpco.io/copyright)
+Copyright © 2017-2023 [Cloud Posse, LLC](https://cpco.io/copyright)
 
 
 
@@ -623,44 +316,46 @@ Check out [our other projects][github], [follow us on twitter][twitter], [apply 
 ### Contributors
 
 <!-- markdownlint-disable -->
-|  [![Igor Rodionov][goruha_avatar]][goruha_homepage]<br/>[Igor Rodionov][goruha_homepage] |
-|---|
+|  [![Igor Rodionov][goruha_avatar]][goruha_homepage]<br/>[Igor Rodionov][goruha_homepage] | [![Max Lobur][max-lobur_avatar]][max-lobur_homepage]<br/>[Max Lobur][max-lobur_homepage] |
+|---|---|
 <!-- markdownlint-restore -->
 
   [goruha_homepage]: https://github.com/goruha
   [goruha_avatar]: https://img.cloudposse.com/150x150/https://github.com/goruha.png
+  [max-lobur_homepage]: https://github.com/max-lobur
+  [max-lobur_avatar]: https://img.cloudposse.com/150x150/https://github.com/max-lobur.png
 
 [![README Footer][readme_footer_img]][readme_footer_link]
 [![Beacon][beacon]][website]
 <!-- markdownlint-disable -->
   [logo]: https://cloudposse.com/logo-300x69.svg
-  [docs]: https://cpco.io/docs?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-docker-ecr-eks-helmfile&utm_content=docs
-  [website]: https://cpco.io/homepage?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-docker-ecr-eks-helmfile&utm_content=website
-  [github]: https://cpco.io/github?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-docker-ecr-eks-helmfile&utm_content=github
-  [jobs]: https://cpco.io/jobs?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-docker-ecr-eks-helmfile&utm_content=jobs
-  [hire]: https://cpco.io/hire?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-docker-ecr-eks-helmfile&utm_content=hire
-  [slack]: https://cpco.io/slack?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-docker-ecr-eks-helmfile&utm_content=slack
-  [linkedin]: https://cpco.io/linkedin?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-docker-ecr-eks-helmfile&utm_content=linkedin
-  [twitter]: https://cpco.io/twitter?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-docker-ecr-eks-helmfile&utm_content=twitter
-  [testimonial]: https://cpco.io/leave-testimonial?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-docker-ecr-eks-helmfile&utm_content=testimonial
-  [office_hours]: https://cloudposse.com/office-hours?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-docker-ecr-eks-helmfile&utm_content=office_hours
-  [newsletter]: https://cpco.io/newsletter?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-docker-ecr-eks-helmfile&utm_content=newsletter
-  [discourse]: https://ask.sweetops.com/?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-docker-ecr-eks-helmfile&utm_content=discourse
-  [email]: https://cpco.io/email?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-docker-ecr-eks-helmfile&utm_content=email
-  [commercial_support]: https://cpco.io/commercial-support?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-docker-ecr-eks-helmfile&utm_content=commercial_support
-  [we_love_open_source]: https://cpco.io/we-love-open-source?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-docker-ecr-eks-helmfile&utm_content=we_love_open_source
-  [terraform_modules]: https://cpco.io/terraform-modules?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-docker-ecr-eks-helmfile&utm_content=terraform_modules
+  [docs]: https://cpco.io/docs?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-terraform-module&utm_content=docs
+  [website]: https://cpco.io/homepage?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-terraform-module&utm_content=website
+  [github]: https://cpco.io/github?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-terraform-module&utm_content=github
+  [jobs]: https://cpco.io/jobs?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-terraform-module&utm_content=jobs
+  [hire]: https://cpco.io/hire?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-terraform-module&utm_content=hire
+  [slack]: https://cpco.io/slack?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-terraform-module&utm_content=slack
+  [linkedin]: https://cpco.io/linkedin?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-terraform-module&utm_content=linkedin
+  [twitter]: https://cpco.io/twitter?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-terraform-module&utm_content=twitter
+  [testimonial]: https://cpco.io/leave-testimonial?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-terraform-module&utm_content=testimonial
+  [office_hours]: https://cloudposse.com/office-hours?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-terraform-module&utm_content=office_hours
+  [newsletter]: https://cpco.io/newsletter?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-terraform-module&utm_content=newsletter
+  [discourse]: https://ask.sweetops.com/?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-terraform-module&utm_content=discourse
+  [email]: https://cpco.io/email?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-terraform-module&utm_content=email
+  [commercial_support]: https://cpco.io/commercial-support?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-terraform-module&utm_content=commercial_support
+  [we_love_open_source]: https://cpco.io/we-love-open-source?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-terraform-module&utm_content=we_love_open_source
+  [terraform_modules]: https://cpco.io/terraform-modules?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-terraform-module&utm_content=terraform_modules
   [readme_header_img]: https://cloudposse.com/readme/header/img
-  [readme_header_link]: https://cloudposse.com/readme/header/link?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-docker-ecr-eks-helmfile&utm_content=readme_header_link
+  [readme_header_link]: https://cloudposse.com/readme/header/link?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-terraform-module&utm_content=readme_header_link
   [readme_footer_img]: https://cloudposse.com/readme/footer/img
-  [readme_footer_link]: https://cloudposse.com/readme/footer/link?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-docker-ecr-eks-helmfile&utm_content=readme_footer_link
+  [readme_footer_link]: https://cloudposse.com/readme/footer/link?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-terraform-module&utm_content=readme_footer_link
   [readme_commercial_support_img]: https://cloudposse.com/readme/commercial-support/img
-  [readme_commercial_support_link]: https://cloudposse.com/readme/commercial-support/link?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-docker-ecr-eks-helmfile&utm_content=readme_commercial_support_link
-  [share_twitter]: https://twitter.com/intent/tweet/?text=github-actions-workflows-docker-ecr-eks-helmfile&url=https://github.com/cloudposse/github-actions-workflows-docker-ecr-eks-helmfile
-  [share_linkedin]: https://www.linkedin.com/shareArticle?mini=true&title=github-actions-workflows-docker-ecr-eks-helmfile&url=https://github.com/cloudposse/github-actions-workflows-docker-ecr-eks-helmfile
-  [share_reddit]: https://reddit.com/submit/?url=https://github.com/cloudposse/github-actions-workflows-docker-ecr-eks-helmfile
-  [share_facebook]: https://facebook.com/sharer/sharer.php?u=https://github.com/cloudposse/github-actions-workflows-docker-ecr-eks-helmfile
-  [share_googleplus]: https://plus.google.com/share?url=https://github.com/cloudposse/github-actions-workflows-docker-ecr-eks-helmfile
-  [share_email]: mailto:?subject=github-actions-workflows-docker-ecr-eks-helmfile&body=https://github.com/cloudposse/github-actions-workflows-docker-ecr-eks-helmfile
-  [beacon]: https://ga-beacon.cloudposse.com/UA-76589703-4/cloudposse/github-actions-workflows-docker-ecr-eks-helmfile?pixel&cs=github&cm=readme&an=github-actions-workflows-docker-ecr-eks-helmfile
+  [readme_commercial_support_link]: https://cloudposse.com/readme/commercial-support/link?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/github-actions-workflows-terraform-module&utm_content=readme_commercial_support_link
+  [share_twitter]: https://twitter.com/intent/tweet/?text=github-actions-workflows-terraform-module&url=https://github.com/cloudposse/github-actions-workflows-terraform-module
+  [share_linkedin]: https://www.linkedin.com/shareArticle?mini=true&title=github-actions-workflows-terraform-module&url=https://github.com/cloudposse/github-actions-workflows-terraform-module
+  [share_reddit]: https://reddit.com/submit/?url=https://github.com/cloudposse/github-actions-workflows-terraform-module
+  [share_facebook]: https://facebook.com/sharer/sharer.php?u=https://github.com/cloudposse/github-actions-workflows-terraform-module
+  [share_googleplus]: https://plus.google.com/share?url=https://github.com/cloudposse/github-actions-workflows-terraform-module
+  [share_email]: mailto:?subject=github-actions-workflows-terraform-module&body=https://github.com/cloudposse/github-actions-workflows-terraform-module
+  [beacon]: https://ga-beacon.cloudposse.com/UA-76589703-4/cloudposse/github-actions-workflows-terraform-module?pixel&cs=github&cm=readme&an=github-actions-workflows-terraform-module
 <!-- markdownlint-restore -->
