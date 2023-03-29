@@ -28,7 +28,7 @@ on:
   workflow_call:
     inputs:
       runs-on:
-        description: "Overrides job runs-on setting (json-formatted list)"
+        description: "Overrides job runs-on setting (json-encoded list)"
         type: string
         required: false
         default: '["ubuntu-latest"]'
@@ -68,8 +68,7 @@ jobs:
     secrets:
       github_access_token: ${{ secrets.github_access_token }}
 
-  ci_gate:
-    name: Gatekeeper
+  ci_gatekeeper:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
     if: ${{ always() }}
     steps:
