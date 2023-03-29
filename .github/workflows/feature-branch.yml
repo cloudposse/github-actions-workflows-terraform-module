@@ -26,6 +26,12 @@ name: |-
 
 on:
   workflow_call:
+    inputs:
+      runs-on:
+        description: "Overrides job runs-on setting (json-formatted list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
     secrets:
       github_access_token:
         description: "GitHub API token"
@@ -37,6 +43,7 @@ concurrency:
 
 jobs:
   ci_terraform:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform.yml@main
     with:
       # Workaround for https://github.com/community/community/discussions/9099
@@ -45,6 +52,7 @@ jobs:
       suggestions: true
 
   ci_readme:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-readme.yml@main
     with:
       # Workaround for https://github.com/community/community/discussions/9099
@@ -53,6 +61,7 @@ jobs:
       suggestions: true
 
   ci_codeowners:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners.yml@main
     with:
       is_fork: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
@@ -60,8 +69,9 @@ jobs:
       github_access_token: ${{ secrets.github_access_token }}
 
   ci_gate:
-    if: ${{ always() }}
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     name: gate
     needs: [ ci_terraform, ci_readme, ci_codeowners ]
+    if: ${{ always() }}
     steps:
       - run: "! ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}"

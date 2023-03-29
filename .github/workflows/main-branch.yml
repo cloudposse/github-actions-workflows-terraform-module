@@ -24,6 +24,12 @@ name: |-
 
 on:
   workflow_call:
+    inputs:
+      runs-on:
+        description: "Overrides job runs-on setting (json-formatted list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
     secrets:
       github_access_token:
         description: "GitHub API token"
@@ -35,18 +41,21 @@ concurrency:
 
 jobs:
   ci_terraform:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform.yml@main
     with:
       filter-mode: nofilter
       suggestions: false
 
   ci_readme:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-readme.yml@main
     with:
       filter-mode: nofilter
       suggestions: false
 
   ci_codeowners:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners.yml@main
     with:
       is_fork: false
@@ -54,5 +63,6 @@ jobs:
       github_access_token: ${{ secrets.github_access_token }}
 
   controller_release:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     uses: cloudposse/github-actions-workflows/.github/workflows/controller-release.yml@main
     needs: [ci_terraform, ci_readme, ci_codeowners]
