@@ -68,10 +68,9 @@ jobs:
     secrets:
       github_access_token: ${{ secrets.github_access_token }}
 
-  ci:
+  ci-gatekeeper:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
     if: ${{ always() }}
     steps:
-      - name: gatekeeper
-        run: "! ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}"
+      - run: "! ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}"
     needs: [ ci-terraform, ci-readme, ci-codeowners ]
