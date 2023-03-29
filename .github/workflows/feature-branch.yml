@@ -70,7 +70,6 @@ jobs:
 
   ci_gate:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
-    name: ci_gate
     if: ${{ always() }}
     steps:
       - run: "! ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}"
