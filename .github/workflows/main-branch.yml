@@ -41,28 +41,29 @@ concurrency:
 
 jobs:
   ci_terraform:
-    runs-on: ${{ fromJSON(inputs.runs-on) }}
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform.yml@main
     with:
       filter-mode: nofilter
       suggestions: false
+      runs-on: ${{ inputs.runs-on }}
 
   ci_readme:
-    runs-on: ${{ fromJSON(inputs.runs-on) }}
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-readme.yml@main
     with:
       filter-mode: nofilter
       suggestions: false
+      runs-on: ${{ inputs.runs-on }}
 
   ci_codeowners:
-    runs-on: ${{ fromJSON(inputs.runs-on) }}
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners.yml@main
     with:
       is_fork: false
+      runs-on: ${{ inputs.runs-on }}
     secrets:
       github_access_token: ${{ secrets.github_access_token }}
 
   controller_release:
-    runs-on: ${{ fromJSON(inputs.runs-on) }}
     uses: cloudposse/github-actions-workflows/.github/workflows/controller-release.yml@main
+    with:
+      runs-on: ${{ inputs.runs-on }}
     needs: [ci_terraform, ci_readme, ci_codeowners]
