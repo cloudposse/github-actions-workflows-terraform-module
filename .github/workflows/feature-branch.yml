@@ -72,5 +72,6 @@ jobs:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
     if: ${{ always() }}
     steps:
+      - run: "echo '${{ needs.*.result }}'"
       - run: "! ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}"
     needs: [ ci-terraform, ci-readme, ci-codeowners ]
