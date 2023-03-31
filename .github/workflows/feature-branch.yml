@@ -68,7 +68,7 @@ jobs:
     secrets:
       github_access_token: ${{ secrets.github_access_token }}
 
-  ci-gatekeeper:
+  ci:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
     if: ${{ always() }}
     steps:
