@@ -6,7 +6,7 @@ name: |-
   In your repo create  __`.github/workflows/main-branch.yaml`__
   
   ```yaml
-    name: Main Branch
+    name: main-branch
     on:
       push:
         branches: [ main ]
@@ -17,13 +17,19 @@ name: |-
     
     jobs:
       terraform-module:
-        uses: cloudposse/github-actions-workflows-terraform-module/.github/workflows/feature-branch.yml@main
+        uses: cloudposse/github-actions-workflows-terraform-module/.github/workflows/main-branch.yml@main
         secrets:
-          github_access_token: $\{\{ secrets.GH_ACCESS_TOKEN \}\}
+          github_access_token: $\{\{ secrets.REPO_ACCESS_TOKEN \}\}
   ```
 
 on:
   workflow_call:
+    inputs:
+      runs-on:
+        description: "Overrides job runs-on setting (json-encoded list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
     secrets:
       github_access_token:
         description: "GitHub API token"
@@ -34,25 +40,30 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  ci_terraform:
+  ci-terraform:
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform.yml@main
     with:
       filter-mode: nofilter
       suggestions: false
+      runs-on: ${{ inputs.runs-on }}
 
-  ci_readme:
+  ci-readme:
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-readme.yml@main
     with:
       filter-mode: nofilter
       suggestions: false
+      runs-on: ${{ inputs.runs-on }}
 
-  ci_codeowners:
+  ci-codeowners:
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners.yml@main
     with:
       is_fork: false
+      runs-on: ${{ inputs.runs-on }}
     secrets:
       github_access_token: ${{ secrets.github_access_token }}
 
-  controller_release:
+  controller-release:
     uses: cloudposse/github-actions-workflows/.github/workflows/controller-release.yml@main
-    needs: [ci_terraform, ci_readme, ci_codeowners]
+    with:
+      runs-on: ${{ inputs.runs-on }}
+    needs: [ci-terraform, ci-readme, ci-codeowners]
