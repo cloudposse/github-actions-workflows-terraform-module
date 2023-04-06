@@ -9,12 +9,12 @@ name: |-
     name: scheduled
     on:
       schedule:
-        - cron: "30 0 * * *"
+        - cron: "0 3 * * *"
   
     permissions:
       pull-requests: write
       id-token: write
-      contents: read
+      contents: write
     
     jobs:
       scheduled:
