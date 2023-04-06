@@ -35,12 +35,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  update-context:
+  context:
     uses: cloudposse/github-actions-workflows/.github/workflows/scheduled-context.yml@sched_workflows
     with:
       runs-on: ${{ inputs.runs-on }}
 
-  update-readme:
+  readme:
     uses: cloudposse/github-actions-workflows/.github/workflows/scheduled-readme.yml@sched_workflows
     with:
       runs-on: ${{ inputs.runs-on }}
