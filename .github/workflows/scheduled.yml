@@ -36,11 +36,11 @@ concurrency:
 
 jobs:
   context:
-    uses: cloudposse/github-actions-workflows/.github/workflows/scheduled-context.yml@sched_workflows
+    uses: cloudposse/github-actions-workflows/.github/workflows/scheduled-context.yml@main
     with:
       runs-on: ${{ inputs.runs-on }}
 
   readme:
-    uses: cloudposse/github-actions-workflows/.github/workflows/scheduled-readme.yml@sched_workflows
+    uses: cloudposse/github-actions-workflows/.github/workflows/scheduled-readme.yml@main
     with:
       runs-on: ${{ inputs.runs-on }}
