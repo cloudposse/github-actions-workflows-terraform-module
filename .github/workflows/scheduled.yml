@@ -19,6 +19,8 @@ name: |-
     jobs:
       scheduled:
         uses: cloudposse/github-actions-workflows-terraform-module/.github/workflows/scheduled.yml@main
+        secrets:
+          github_access_token: ${{ secrets.REPO_ACCESS_TOKEN }}
   ```
 
 on:
@@ -29,6 +31,10 @@ on:
         type: string
         required: false
         default: '["ubuntu-latest"]'
+    secrets:
+      github_access_token:
+        description: "GitHub API token"
+        required: true
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -39,8 +45,12 @@ jobs:
     uses: cloudposse/github-actions-workflows/.github/workflows/scheduled-context.yml@main
     with:
       runs-on: ${{ inputs.runs-on }}
+    secrets:
+      github_access_token: ${{ secrets.github_access_token }}
 
   readme:
     uses: cloudposse/github-actions-workflows/.github/workflows/scheduled-readme.yml@main
     with:
       runs-on: ${{ inputs.runs-on }}
+    secrets:
+      github_access_token: ${{ secrets.github_access_token }}
