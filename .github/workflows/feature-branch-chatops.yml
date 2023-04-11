@@ -36,6 +36,6 @@ concurrency:
 
 jobs:
   ci-terraform-chatops:
-    uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform-chatops.yml@main
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform-chatops.yml@chatops
     with:
       runs-on: ${{ inputs.runs-on }}
