@@ -20,7 +20,7 @@ name: |-
       scheduled:
         uses: cloudposse/github-actions-workflows-terraform-module/.github/workflows/scheduled.yml@main
         secrets:
-          github_access_token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          github_access_token: $\{\{ secrets.REPO_ACCESS_TOKEN \}\}
   ```
 
 on:
