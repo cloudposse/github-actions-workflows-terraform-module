@@ -1,0 +1,49 @@
+name: |-
+  Feature Branch (Pull Request) ChatOps for a Terraform Module
+  
+  ### Usage 
+  
+  In your repo create  __`.github/workflows/feature-branch-chatops.yaml`__
+  
+  ```yaml
+    name: feature-branch-chatops
+    on:
+      issue_comment:
+        types: [created]
+    
+    permissions:
+      pull-requests: write
+      id-token: write
+      contents: read
+    
+    jobs:
+      terraform-module:
+        uses: cloudposse/github-actions-workflows-terraform-module/.github/workflows/feature-branch-chatops.yml@main
+        secrets:
+          github_access_token: $\{\{ secrets.REPO_ACCESS_TOKEN \}\}
+  ```
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: "Overrides job runs-on setting (json-encoded list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
+    secrets:
+      github_access_token:
+        description: "GitHub API token"
+        required: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ci-terraform-chatops:
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform-chatops.yml@main
+    with:
+      runs-on: ${{ inputs.runs-on }}
+    secrets:
+      github_access_token: ${{ secrets.github_access_token }}
