@@ -3,7 +3,7 @@ name: |-
   
   ### Usage 
   
-  In your repo create  __`.github/workflows/feature-branch-chatops.yaml`__
+  In your repo create  __`.github/workflows/feature-branch-chatops.yml`__
   
   ```yaml
     name: feature-branch-chatops
