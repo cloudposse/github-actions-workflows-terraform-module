@@ -37,6 +37,6 @@ concurrency:
 
 jobs:
   controller-release-branches:
-    uses: cloudposse/github-actions-workflows/.github/workflows/controller-release-branches.yml@main
+    uses: cloudposse/github-actions-workflows/.github/workflows/controller-release-branches.yml@releases
     with:
       runs-on: ${{ inputs.runs-on }}
