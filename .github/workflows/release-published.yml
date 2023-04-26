@@ -1,0 +1,42 @@
+name: |-
+  Release Published Workflow of a Terraform Module
+  
+  ### Usage 
+  
+  In your repo create  __`.github/workflows/release.yml`__
+  
+  ```yaml
+    name: release
+    on:
+      release:
+        types:
+          - published
+    
+    permissions:
+      contents: write
+      id-token: write
+    
+    jobs:
+      terraform-module:
+        uses: cloudposse/github-actions-workflows-terraform-module/.github/workflows/release-publushed.yml@main
+
+  ```
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: "Overrides job runs-on setting (json-encoded list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  controller-release-branches:
+    uses: cloudposse/github-actions-workflows/.github/workflows/controller-release-branches.yml@main
+    with:
+      runs-on: ${{ inputs.runs-on }}

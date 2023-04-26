@@ -3,7 +3,7 @@ name: |-
   
   ### Usage 
   
-  In your repo create  __`.github/workflows/scheduled.yaml`__
+  In your repo create  __`.github/workflows/scheduled.yml`__
   
   ```yaml
     name: scheduled
