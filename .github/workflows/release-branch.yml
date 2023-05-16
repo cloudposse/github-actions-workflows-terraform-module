@@ -55,6 +55,7 @@ jobs:
       filter-mode: nofilter
       suggestions: false
       runs-on: ${{ inputs.runs-on }}
+      ref: ${{ github.ref_name }}
 
   ci-codeowners:
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners.yml@main
