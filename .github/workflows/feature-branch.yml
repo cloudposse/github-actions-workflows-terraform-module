@@ -59,7 +59,8 @@ jobs:
       filter-mode: diff_context
       suggestions: true
       runs-on: ${{ inputs.runs-on }}
-      ref: ${{ github.head_ref }}
+      ref: ${{ github.event.pull_request.head.ref }}
+      repository: ${{ github.event.pull_request.head.repo.full_name }}
 
   ci-codeowners:
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners.yml@main
