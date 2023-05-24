@@ -65,7 +65,7 @@ jobs:
       github_access_token: ${{ secrets.github_access_token }}
 
   controller-release:
-    uses: cloudposse/github-actions-workflows/.github/workflows/controller-release.yml@main
+    uses: cloudposse/github-actions-workflows/.github/workflows/controller-release.yml@dedup_release
     with:
       runs-on: ${{ inputs.runs-on }}
       publish: ${{ github.ref_name == 'main' || github.ref_name == 'master' }}  # Do not publish for release/* branches until https://github.com/release-drafter/release-drafter/issues/1339
