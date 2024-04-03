@@ -33,7 +33,7 @@ on:
         required: false
         default: '["ubuntu-latest"]'
     secrets:
-      github_access_token:
+      REPO_ACCESS_TOKEN:
         description: "GitHub API token"
         required: true
 
@@ -62,7 +62,7 @@ jobs:
       is_fork: false
       runs-on: ${{ inputs.runs-on }}
     secrets:
-      github_access_token: ${{ secrets.github_access_token }}
+      github_access_token: ${{ secrets.REPO_ACCESS_TOKEN }}
 
   auto-release:
     needs: [ci-terraform, ci-readme, ci-codeowners]
