@@ -33,7 +33,7 @@ on:
         required: false
         default: '["ubuntu-latest"]'
     secrets:
-      github_access_token:
+      REPO_ACCESS_TOKEN:
         description: "GitHub API token"
         required: true
 
@@ -62,18 +62,12 @@ jobs:
       is_fork: false
       runs-on: ${{ inputs.runs-on }}
     secrets:
-      github_access_token: ${{ secrets.github_access_token }}
+      github_access_token: ${{ secrets.REPO_ACCESS_TOKEN }}
 
-  controller-release:
-    uses: cloudposse/github-actions-workflows/.github/workflows/controller-release.yml@main
-    with:
-      runs-on: ${{ inputs.runs-on }}
-      publish: ${{ github.ref_name == 'main' || github.ref_name == 'master' }}  # Do not publish for release/* branches until https://github.com/release-drafter/release-drafter/issues/1339
+  auto-release:
     needs: [ci-terraform, ci-readme, ci-codeowners]
-
-  # Repeating release-published workflow here bc GITHUB_TOKEN won't trigger it
-  controller-release-branches:
-    uses: cloudposse/github-actions-workflows/.github/workflows/controller-release-branches.yml@main
+    uses: cloudposse/.github/.github/workflows/shared-auto-release.yml@main
     with:
-      runs-on: ${{ inputs.runs-on }}
-    needs: [controller-release]
+      runs-on: ${{ inputs.runs-on }}    
+      publish: true
+    secrets: inherit
