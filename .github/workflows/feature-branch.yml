@@ -51,6 +51,17 @@ jobs:
       suggestions: true
       runs-on: ${{ inputs.runs-on }}
 
+  ci-readme:
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-readme.yml@readme-update
+    with:
+      # Workaround for https://github.com/community/community/discussions/9099
+      # We should switch to nofilter once it's fixed
+      filter-mode: diff_context
+      suggestions: true
+      runs-on: ${{ inputs.runs-on }}
+      ref: ${{ github.event.pull_request.head.ref }}
+      repository: ${{ github.event.pull_request.head.repo.full_name }}
+
   ci-codeowners:
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners.yml@main
     with:
@@ -71,4 +82,4 @@ jobs:
       - run: |
           echo '${{ toJSON(needs) }}'  # easier debug
           ! ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}
-    needs: [ ci-terraform, ci-codeowners, ci-labels ]
+    needs: [ ci-terraform, ci-readme, ci-codeowners, ci-labels ]
