@@ -33,7 +33,7 @@ on:
         required: false
         default: '["ubuntu-latest"]'
     secrets:
-      github_access_token:
+      REPO_ACCESS_TOKEN:
         description: "GitHub API token"
         required: false
 
@@ -57,7 +57,7 @@ jobs:
       is_fork: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
       runs-on: ${{ inputs.runs-on }}
     secrets:
-      github_access_token: ${{ secrets.github_access_token }}
+      github_access_token: ${{ secrets.REPO_ACCESS_TOKEN }}
 
   ci-labels:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
