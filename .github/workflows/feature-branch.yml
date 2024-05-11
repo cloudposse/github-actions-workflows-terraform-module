@@ -47,10 +47,8 @@ jobs:
     with:
       # Workaround for https://github.com/community/community/discussions/9099
       # We should switch to nofilter once it's fixed
-      # filter-mode: diff_context
-      # suggestions: true
-      filter-mode: nofilter
-      suggestions: false      
+      filter-mode: diff_context
+      suggestions: true
       runs-on: ${{ inputs.runs-on }}
 
   ci-codeowners:
