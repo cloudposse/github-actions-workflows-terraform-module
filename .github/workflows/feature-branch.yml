@@ -49,7 +49,7 @@ jobs:
       # We should switch to nofilter once it's fixed
       # filter-mode: diff_context
       # suggestions: true
-      filter-mode: nofilter
+      filter-mode: diff_context
       suggestions: false      
       runs-on: ${{ inputs.runs-on }}
 
